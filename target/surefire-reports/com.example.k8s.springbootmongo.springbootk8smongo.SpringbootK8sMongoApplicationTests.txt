@@ -1,0 +1,11 @@
+-------------------------------------------------------------------------------
+Test set: com.example.k8s.springbootmongo.springbootk8smongo.SpringbootK8sMongoApplicationTests
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 2.03 s <<< FAILURE! - in com.example.k8s.springbootmongo.springbootk8smongo.SpringbootK8sMongoApplicationTests
+getsAllRides  Time elapsed: 0 s  <<< ERROR!
+java.lang.IllegalStateException: Failed to load ApplicationContext
+Caused by: java.lang.IllegalStateException: Error processing condition on org.springframework.cloud.kubernetes.discovery.ext.KubernetesServiceRegistryAutoConfiguration.serviceRegistry
+Caused by: java.lang.IllegalStateException: @ConditionalOnMissingBean did not specify a bean using type, name or annotation and the attempt to deduce the bean's type failed
+Caused by: org.springframework.boot.autoconfigure.condition.OnBeanCondition$BeanTypeDeductionException: Failed to deduce bean type for org.springframework.cloud.kubernetes.discovery.ext.KubernetesServiceRegistryAutoConfiguration.serviceRegistry
+Caused by: java.lang.UnsupportedClassVersionError: org/springframework/cloud/kubernetes/discovery/ext/KubernetesServiceRegistry has been compiled by a more recent version of the Java Runtime (class file version 55.0), this version of the Java Runtime only recognizes class file versions up to 52.0
+
