@@ -59,6 +59,9 @@ sudo systemctl start docker
 sudo systemctl enable docker
 sudo systemctl status docker
 
+![WhatsApp Image 2021-10-14 at 9 24 56 PM](https://user-images.githubusercontent.com/92055809/137382874-28cac41d-1c91-4fe8-bdd5-449bb7e16faf.jpeg)
+
+
 
 ### Jenkins Installation
 
@@ -88,15 +91,19 @@ Note: I faced an error regarding certificate verification failed. In order to re
 sudo apt install ca-certificates
 sudo apt-get update
 
+![WhatsApp Image 2021-10-14 at 9 24 56 PM (1)](https://user-images.githubusercontent.com/92055809/137382925-0c7459d0-be58-47f3-8d5a-327ba9e32fea.jpeg)
+
 
 
 ## Create a ECR repo in AWS.
 
-TODO add ECR image 
+![WhatsApp Image 2021-10-14 at 9 24 49 PM](https://user-images.githubusercontent.com/92055809/137382673-575ce891-2810-4a99-a250-be7a81c9bc83.jpeg)
+ 
 
 - In order to access the ECR from EC2 instance, we need to create a IAM role with `AmazonEC2ContainerRegistryFullAccess` policy and attach/modify the instance with this role.
 
-TODO add the image 
+![WhatsApp Image 2021-10-14 at 9 24 49 PM (1)](https://user-images.githubusercontent.com/92055809/137382787-d6c8de7d-f553-4c5c-8210-c03017ce6eaf.jpeg)
+
 
 ## Create a Kubernetes Cluster and worker nodes in Elastic Kubernetes Service(EKS).
 
@@ -133,9 +140,9 @@ https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
 
 Once you setup kubectl and AWS-CLI in your machine run below command to configure kubectl for AWS EKS
 
-
+```
 aws eks --region <regionname> update-kubeconfig --name <cluster-name>
-
+```
 
 step 5: IAM Role creation for WorkerNode
 
@@ -145,7 +152,8 @@ step 6: Launching Kubernetes worker nodes
 
 Note: Make sure to select the minimum and maximum size of your nodes for auto scaling.
 
-TODO add images
+![WhatsApp Image 2021-10-14 at 9 24 57 PM](https://user-images.githubusercontent.com/92055809/137383175-9671422b-0028-401a-9dff-824289219998.jpeg)
+
 
 ### Deploy the Application to Kubernetes and enable autoscaling.
 
