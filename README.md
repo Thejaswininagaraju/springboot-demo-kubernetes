@@ -1,99 +1,243 @@
-# springboot-k8s-mongo
+# Springboot CI/CD devops pipeline 
 
-Pre-requisites:
---------
-    - Install Git
-    - Install Maven
-    - Install Docker
-    - EKS Cluster
-    
-Clone code from github:
--------
-    git clone https://github.com/thejaswini/kubernetes.git
-    cd kubernetes/springboot-k8s-mongo/
-    
-Build Maven Artifact:
--------
-    mvn clean install -DskipTests=true
+The repo demonstrates how to create a simple springboot application, build the application using Docker and push the image to ECR and run the application on EKS.
+
+
+## Features
+
+- Create a simple Springboot application using mongoDB.
+- Create a EC2 instance and install Jenkins, Docker.
+- Create a ECR repo in AWS. 
+- Create a Kubernetes Cluster and worker nodes in Elastic Kubernetes Service(EKS).  
+- Deploy the Application to Kubernetes and enable autoscaling. 
+- Send logs to Kibana from Kubernetes Pods
+- Explore grafana from Elastic Search data.
+
+## Create a simple Springboot application using mongoDB
+
+The Springboot demo application consists of two features.
+- `addProduct` will add products to mongoDB
+- `findAllProducts` will retrieve all the product details stored in the mongoDB 
+
+Currently, the test case include to check if we get a response for `findAllProducts` from the database.
+
+Install the dependencies and devDependencies and start the server.
+
+## Create a EC2 instance and install Jenkins, Docker.
+
+- Choose an Amazon machine Image(AMI) for this demo I selected (Ubuntu Server 20.04 LTS (HVM), SSD Volume Type - free tier eligible)
+- Machine type- t2.micro(free tier eligible).
+- Default network was created. 
+- Default storage option was selected.
+- Connect to the EC2 instance to install the required packages. This information can be found in the instance details.
+
+### Docker Installation
+
+Docker installation steps using default repository from Ubuntu
+
+sudo apt-get update
+
+
+Install the below packages
+
+sudo apt install gnupg2 pass -y
+
  
-Build Docker image for Springboot Application
---------------
-    docker build -t thejaswini/springboot-k8s-mongo .
-  
-Docker login
--------------
-    docker login
-    
-Push docker image to dockerhub
------------
-    docker push thejaswini/springboot-k8s-mongo
+Install docker 
 
-Encode USERNAME and PASSWORD of Postgres using following commands:
---------
-    echo -n "mongoadmin" | base64
-    echo -n "admin123" | base64
-Create the Secret using kubectl apply:
--------
-    kubectl apply -f mongo-secret.yml
+sudo apt install docker.io -y
 
-Create PV and PVC for Mongo using yaml file:
------
-    kubectl apply -f mongo-pv.yml
-    kubectl apply -f mongo-pvc.yml
-    
-Deploying Mongo with kubectl apply:
------------
-    kubectl apply -f mongo-deployment.yml
-    kubectl apply -f mongo-service.yml
-    
-Give permission for service which is running under same namespace by using rolebinding
-----------------------
-    kubectl create rolebinding default-view \
-      --clusterrole=view \
-      --serviceaccount=default:default \
-      --namespace=default
 
-Create configmaps for URL which we use in Springboot:
--------
-    kubectl apply -f mongo-config.yml
-Deploy Springboot Application:
--------------
-    kubectl apply -f springboot-deployment.yml
-    kubectl apply -f springboot-service.yml
-Check secrets:
--------
-    kubectl get secrets
-    kubectl get configmaps
-    kubectl get pv
-    kubectl get pvc
-    kubectl get deploy
-    kubectl get pods
-    kubectl get svc
-    
-Now Goto Loadbalancer and check whether service comes Inservice or not, If it comes Inservice copy DNS Name of Loadbalancer 
+Add Ubuntu user to Docker group
 
-POST Method you can check in POSTMAN App:
---------------
-    af43efdd8377b4896841fbc4ca8da55f-1519337998.us-west-2.elb.amazonaws.com:8080/addProduct
-    {
-	"id":"100",
-	"productId":"100",
-	"description":"my prodcut",
-	"price":"100.23"
+sudo usermod -aG docker $USER
+
+
+The Docker service needs to be setup to run at startup. To do so, type in each command followed by enter:
+
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo systemctl status docker
+
+
+### Jenkins Installation
+
+
+sudo apt install openjdk-11-jdk
+sudo java -version 
+
+
+
+wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key |
+sudo apt-key add -
+sudo sh -c 'echo deb https://pkg.jenkins.io/debian-stable binary/ > 
+/etc/apt/sources.list.d/jenkins.list'
+sudo apt-get update
+sudo apt-get install jenkins
+
+
+
+sudo systemctl daemon-reload
+sudo systemctl start jenkins
+sudo systemctl status jenkins
+
+
+Note: I faced an error regarding certificate verification failed. In order to resolve that I used the below command.
+
+
+sudo apt install ca-certificates
+sudo apt-get update
+
+
+
+## Create a ECR repo in AWS.
+
+TODO add ECR image 
+
+- In order to access the ECR from EC2 instance, we need to create a IAM role with `AmazonEC2ContainerRegistryFullAccess` policy and attach/modify the instance with this role.
+
+TODO add the image 
+
+## Create a Kubernetes Cluster and worker nodes in Elastic Kubernetes Service(EKS).
+
+Step 1: Creating an EKS role.
+
+Choose EKS -Cluster and click on permission, automatically “AmazonEKSClusterPolicy” is there for the role.
+
+Step 2: Create a VPC to deploy the cluster.
+
+Go to “AWS CloudFormation” and click on “Create Stack” and give below URL as “Amazon S3 URL”. 
+
+https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2019-02-11/amazon-eks-vpc-sample.yaml
+
+
+step 3: Create AWS EKS Cluster
+Go to the “AWS EKS” service and click “Create cluster”.
+
+step 4: 
+
+kubectl create clusterrolebinding cluster-system-anonymous --clusterrole=cluster-admin --user=system:anonymous
+
+step 5: Configure kubectl for Amazon EKS
+
+Connect to the EC2 instance which was created before and install the below package.
+
+Install kubectl:
+https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html
+
+Install aws-iam-authenticator : 
+https://docs.aws.amazon.com/eks/latest/userguide/install-aws-iam-authenticator.html
+
+Install AWS CLI:
+https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
+
+Once you setup kubectl and AWS-CLI in your machine run below command to configure kubectl for AWS EKS
+
+
+aws eks --region <regionname> update-kubeconfig --name <cluster-name>
+
+
+step 5: IAM Role creation for WorkerNode
+
+Create an IAM policy and use the below policies `AmazonEKSWorkerNodePolicy`, `AmazonEKS_CNI_Policy`, `AmazonEC2ContainerRegistryReadOnly`
+
+step 6: Launching Kubernetes worker nodes
+
+Note: Make sure to select the minimum and maximum size of your nodes for auto scaling.
+
+TODO add images
+
+### Deploy the Application to Kubernetes and enable autoscaling.
+
+Step1 : Create a jenkins pipeline 
+Step2 : Install docker, docker pipeline,Amazon ECR plugin and configure the Kubernetes configuration 
+
+sudo cat ~/.kube/config 
+
+
+Step2 : Below is the pipeline code which was used
+
+
+pipeline {
+    agent any
+    environment {
+        registry = "053757569223.dkr.ecr.us-west-2.amazonaws.com/springboot-application-repo"
     }
-![1](https://user-images.githubusercontent.com/63221837/82110586-3aa70b00-975d-11ea-8f63-c6fb231e6dbf.png)
+    
+    stages {
+        stage('Cloning Git') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '', url: 'https://github.com/Thejaswininagaraju/springboot-demo-kubernetes']]])      
+            }
+        }
+   
+    // Building Docker images
+    stage('Building image') {
+      steps{
+        script {
+          dockerImage = docker.build registry
+        }
+      }
+    }
+    
+    // Uploading Docker images into AWS ECR
+    stage('Pushing to ECR') {
+     steps{   
+         script {
+                sh 'aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 053757569223.dkr.ecr.us-west-2.amazonaws.com'
+                sh 'docker build -t springboot-application-repo .'
+         }
+        }
+      }
+    
+         // Stopping Docker containers for cleaner Docker run
+     stage('stop previous containers') {
+         steps {
+            sh 'docker ps -f name=mypythonContainer -q | xargs --no-run-if-empty docker container stop'
+            sh 'docker container ls -a -fname=mypythonContainer -q | xargs -r docker container rm'
+         }
+       }
+       
+    stage('Create secret') {
+     steps{
+         script {
+                sh 'kubectl apply -f mongo-secret.yml''
+            }
+      }
+    }
+     stage('Create PV and PVC') {
+     steps{
+         script {
+                sh 'kubectl apply -f mongo-pv.yml'
+                sh 'kubectl apply -f mongo-pvc.yml'
+            }
+      }
+    }
 
-Get Methods you can check in web UI:
-----------------
-    af43efdd8377b4896841fbc4ca8da55f-1519337998.us-west-2.elb.amazonaws.com:8080/findAllProducts
-    af43efdd8377b4896841fbc4ca8da55f-1519337998.us-west-2.elb.amazonaws.com:8080/findProduct/100
-    af43efdd8377b4896841fbc4ca8da55f-1519337998.us-west-2.elb.amazonaws.com:8080/deleteProduct/100
- 
-Now we can cleanup by using below commands:
---------
-    kubectl delete deploy mongo spring-mongo-service
-    kubectl delete svc mongodb-service spring-mongo-service
-    kubectl delete pvc mongo-pv-claim
-    kubectl delete pv mongo-pv-volume
-    kubectl delete configmaps mongo-conf
-    kubectl delete secrets mongo-secret
+    stage('Create Mongodb') {
+     steps{
+         script {
+                sh 'kubectl apply -f mongo-deployment.yml'
+                sh 'kubectl apply -f mongo-service.yml'
+            }
+      }
+    }
+       stage('create configmaps') {
+     steps{
+         script {
+                sh 'kubectl apply -f mongo-config.yml'
+            }
+      }
+    }
+
+     stage('Deploy Springboot Application') {
+     steps{
+         script {
+                sh 'kubectl apply -f springboot-deployment.yml'
+                sh 'kubectl apply -f springboot-service.yml'
+
+            }
+      }
+    }
+    }
+}
